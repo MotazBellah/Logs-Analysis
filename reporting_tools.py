@@ -1,20 +1,27 @@
+#!/usr/bin/env python3
 import psycopg2
+import sys
 
 DBNAME = 'news'
 
 # Query for most popular articles
-popular_articles = ''' select articles.title, count(*) as num from articles join log on
-log.path like '%'|| articles.slug || '%'
+popular_articles = ''' select articles.title, count(*)
+ as num from articles join log on
+ where log.path = '/article/' || articles.slug
  group by articles.title order by num desc limit 3
 '''
+
 # Query for most popular authors
-articles_authors_view = '''create view atrtic_author as select slug, name from articles join authors
+articles_authors_view = '''create view atrtic_author as
+ select slug, name from articles join authors
  on articles.author = authors.id'''
 
-popular_authors = ''' select atrtic_author.name , count(*) as num from atrtic_author join log
-on log.path like '%'|| atrtic_author.slug || '%'
+popular_authors = ''' select atrtic_author.name , count(*)
+ as num from atrtic_author join log
+ on log.path like '%'|| atrtic_author.slug || '%'
  group by atrtic_author.name order by num desc;
 '''
+
 # Query for most requstes lead to error
 # Create table with date with total requstes
 total_view = '''create view total_count as select date(time), count(*) as totl
@@ -34,12 +41,19 @@ error_requests = '''select to_char(date, 'Mon dd, yyyy'), c from
 
 def get_data(*qureies):
     ''' This function used to connect to the database'''
-    pg = psycopg2.connect(dbname=DBNAME)
-    c = pg.cursor()
-    for qurey in qureies:
-        c.execute(qurey)
-    d = c.fetchall()
-    pg.close()
+    try:
+        pg = psycopg2.connect(dbname=DBNAME)
+    except psycopg2.Error as e:
+        print ("Unable to connect!")
+        print (e.pgerror)
+        print (e.diag.message_detail)
+        sys.exit(1)
+    else:
+        c = pg.cursor()
+        for qurey in qureies:
+            c.execute(qurey)
+        d = c.fetchall()
+        pg.close()
     return d
 
 
@@ -65,5 +79,6 @@ def display_error():
     else:
         print("We have no errors :)")
 
-display_data()
-display_error()
+if __name__ == '__main__':
+    display_data()
+    display_error()
