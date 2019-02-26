@@ -19,5 +19,5 @@ total_view = '''create view total_count as select date(time), count(*) as totl f
  sum_view = '''create view addtion as select date(time), count(*) as sum from log where status != '200 OK' group by date(time) '''
  
 ## Run
-All you have to do is just to type the name of file on linux terminal (Bash) like this: python reporting_tools.py
+All you have to do is just to type the name of file on linux terminal (Bash) like this: python reporting_tools.py in your server(VM, real server)
 and the data will printed out
